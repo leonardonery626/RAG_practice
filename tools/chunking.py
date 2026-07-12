@@ -24,7 +24,8 @@ class PDFChunker:
         self.chunk_size = max(chunk_size, 1)
         self.overlap = int(self.chunk_size * overlap_ratio)
 
-    def extract_pages(self, pdf_path: str | Path) -> list[dict[str, Any]]:
+    @staticmethod
+    def extract_pages(pdf_path: str | Path) -> list[dict[str, Any]]:
         """Extract text from all PDF pages."""
         pages = []
 
@@ -57,6 +58,7 @@ class PDFChunker:
         if not words:
             return []
 
+        # Calculate the number of words to overlap between chunks, ensuring it is within valid bounds.
         overlap = min(
             max(self.overlap, 0),
             self.chunk_size - 1,
@@ -109,8 +111,9 @@ class PDFChunker:
         chunks: list[dict[str, Any]],
         output_path: str | Path,
     ) -> None:
-        """Persist chunks as JSON."""
+        """Persist chunks as JSON, overwriting any existing file."""
         path = Path(output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         with path.open("w", encoding="utf-8") as file:
             json.dump(
