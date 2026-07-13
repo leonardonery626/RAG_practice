@@ -26,9 +26,23 @@ def get_parameters(top_k: int = 3, prompt: str = "") -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments for retrieval."""
-    parser = argparse.ArgumentParser(description="Retrieve similar chunks from a FAISS index")
-    parser.add_argument("--top-k", type=int, required=True, help="Number of similar chunks to return")
-    parser.add_argument("--prompt", type=str, required=True, help="Text prompt for semantic retrieval")
+    parser = argparse.ArgumentParser(
+        description="Retrieve similar chunks from a FAISS index"
+    )
+    parser.add_argument(
+        "--top-k",
+        type=int,
+        required=True,
+        default=3,
+        help="Number of similar chunks to return",
+    )
+    parser.add_argument(
+        "--prompt",
+        type=str,
+        required=True,
+        default="",
+        help="Text prompt for semantic retrieval",
+    )
     return parser.parse_args()
 
 
