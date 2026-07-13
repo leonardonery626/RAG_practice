@@ -1,85 +1,58 @@
-
-import faiss
-from sentence_transformers import SentenceTransformer
-import json
+import argparse
+import sys
 from pathlib import Path
-import numpy as np
+from typing import Any
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from tools.retriever_builder import RetrieverBuilder
+
+REPO_ROOT = ROOT_DIR
+INDEX_FILE = REPO_ROOT / "supporting_files" / "generated_chunks_index.faiss"
+CHUNKS_FILE = REPO_ROOT / "supporting_files" / "generated_chunks.json"
 
 
-MODEL_NAME = "BAAI/bge-small-en-v1.5"
-
-model = SentenceTransformer(MODEL_NAME)
-
-def generate_embedding(text: str):
-    return model.encode(text, convert_to_numpy=True)
-
-
-class Retriever:
-
-    def __init__(self, index_path: str, chunks_path: str):
-
-        # Load FAISS index
-        self.index = faiss.read_index(index_path)
-
-        # Load chunks (JSON)
-        chunks_file = Path(chunks_path)
-        with chunks_file.open("r", encoding="utf-8") as f:
-            self.chunks = json.load(f)
-
-    def search(self, prompt: str, top_k: int):
-
-        # Encode user prompt
-        query_embedding = generate_embedding(prompt)
-
-        # FAISS expects shape (1, embedding_dim)
-        query_vector = np.array(
-            [query_embedding],
-            dtype=np.float32
-        )
-
-        # Normalize if index was built using cosine similarity
-        faiss.normalize_L2(query_vector)
-
-        # Similarity search
-        scores, indices = self.index.search(
-            query_vector,
-            top_k
-        )
-
-        results = []
-
-        for score, idx in zip(scores[0], indices[0]):
-
-            results.append({
-                "rank": len(results) + 1,
-                "score": float(score),
-                "chunk": self.chunks[idx]
-            })
-
-        return results
+def get_parameters(top_k: int = 3, prompt: str = "") -> dict[str, Any]:
+    """Return the default retrieval configuration."""
+    return {
+        "index_path": INDEX_FILE,
+        "chunks_path": CHUNKS_FILE,
+        "top_k": top_k,
+        "prompt": prompt,
+    }
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for retrieval."""
+    parser = argparse.ArgumentParser(description="Retrieve similar chunks from a FAISS index")
+    parser.add_argument("--top-k", type=int, required=True, help="Number of similar chunks to return")
+    parser.add_argument("--prompt", type=str, required=True, help="Text prompt for semantic retrieval")
+    return parser.parse_args()
 
-    prompt = """
-    Qui sont Adolphe et Eugène Schneider, et quelles étaient les principales
-    activités industrielles de Schneider et Cie au Creusot au XIXe siècle ?
-    """
 
-    retriever = Retriever(
-        index_path="temp_files\\chunks_index.faiss",
-        chunks_path="temp_files\\chunks_reduced.json"
+def main(params: dict[str, Any] | None = None) -> None:
+    """Run the retrieval workflow from the CLI entry point."""
+    if params is None:
+        args = parse_args()
+        config = get_parameters(top_k=args.top_k, prompt=args.prompt)
+    else:
+        config = params
+
+    retriever = RetrieverBuilder(
+        index_path=config["index_path"],
+        chunks_path=config["chunks_path"],
     )
+    results = retriever.search(prompt=config["prompt"], top_k=config["top_k"])
 
-    results = retriever.search(
-        prompt=prompt,
-        top_k=3
-    )
-
-    print("\n===== TOP 3 SIMILAR CHUNKS =====\n")
-
+    print("\n===== TOP SIMILAR CHUNKS =====\n")
     for result in results:
         print(f"Rank : {result['rank']}")
         print(f"Score: {result['score']:.4f}")
         print(result["chunk"])
         print("-" * 80)
+
+
+if __name__ == "__main__":
+    main()
