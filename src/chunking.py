@@ -8,9 +8,8 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from tools.chunking_builder import PDFChunker
+from func.chunking_builder import PDFChunker
 
-PDF_PATH = ROOT_DIR / "supporting_files" / "History_of_the_FIFA_World_Cup.pdf"
 OUTPUT_PATH = ROOT_DIR / "supporting_files" / "generated_chunks.json"
 
 
@@ -27,10 +26,9 @@ def get_parameters(chunk_size: int = 600, overlap_ratio: float = 0.1) -> dict[st
     Returns
     -------
     dict[str, Any]
-        Dictionary containing the PDF path, output path, chunk size, and overlap ratio.
+        Dictionary containing the output path, chunk size, and overlap ratio.
     """
     return {
-        "pdf_path": PDF_PATH,
         "output_path": OUTPUT_PATH,
         "chunk_size": chunk_size,
         "overlap_ratio": overlap_ratio,
@@ -76,7 +74,7 @@ def main(params: dict[str, Any] | None = None) -> None:
     else:
         config = params
 
-    pdf_path = Path(config["pdf_path"])
+    pdf_path = Path(config["pdf_path"]) if config.get("pdf_path") else None
     output_path = Path(config["output_path"])
 
     chunker = PDFChunker(
@@ -85,8 +83,8 @@ def main(params: dict[str, Any] | None = None) -> None:
     )
 
     chunker.process(
-        pdf_path=pdf_path,
         output_path=output_path,
+        pdf_path=pdf_path,
     )
 
 
