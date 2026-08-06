@@ -1,11 +1,17 @@
 from transformers import pipeline, AutoTokenizer
 import logging
 
+import torch
+
 from func.retriever_builder import RetrieverBuilder
 
 logger = logging.getLogger(__name__)
 
 MODEL_ID = "microsoft/Phi-3-mini-4k-instruct"
+
+# Avoid accelerate's automatic disk/CPU offload, which leaves params on the meta device.
+DEVICE_MAP = "auto" if torch.cuda.is_available() else None
+DEVICE = None if torch.cuda.is_available() else -1
 
 # Load model and tokenizer at module level for efficiency
 logger.info("Loading model: %s", MODEL_ID)
@@ -14,7 +20,8 @@ generator = pipeline(
     "text-generation",
     model=MODEL_ID,
     tokenizer=tokenizer,
-    device_map="auto",  # uses GPU if available, else CPU
+    device_map=DEVICE_MAP,
+    device=DEVICE,
     dtype="auto",
     clean_up_tokenization_spaces=False,  # BPE tokenizers shouldn't strip spaces
 )
