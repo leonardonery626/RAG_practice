@@ -11,7 +11,7 @@ import numpy as np
 from numpy.typing import NDArray
 from sentence_transformers import SentenceTransformer
 
-from tools.file_finder import DEFAULT_DATA_DIR, get_chunks_file, get_index_file
+from src.tools.file_finder import DEFAULT_DATA_DIR, get_chunks_file, get_index_file
 
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
 EmbeddingArray = NDArray[np.float32]

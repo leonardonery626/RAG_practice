@@ -8,7 +8,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from func.chunking_builder import PDFChunker
+from src.func.chunking_builder import PDFChunker
 
 OUTPUT_PATH = ROOT_DIR / "supporting_files" / "generated_chunks.json"
 

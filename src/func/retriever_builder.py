@@ -6,7 +6,7 @@ import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from tools.file_finder import DEFAULT_DATA_DIR, get_chunks_file, get_index_file
+from src.tools.file_finder import DEFAULT_DATA_DIR, get_chunks_file, get_index_file
 
 logger = logging.getLogger(__name__)
 

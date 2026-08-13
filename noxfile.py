@@ -17,8 +17,8 @@ PYTHON_VERSIONS = nox.project.python_versions(
     max_version="3.12",
 )
 
-LINT_TARGETS = ("src", "func", "tools", "local_server", "noxfile.py")
-TYPE_TARGETS = ("src", "func", "tools", "local_server")
+LINT_TARGETS = ("src", "noxfile.py")
+TYPE_TARGETS = ("src",)
 DOCKERFILES = tuple(Path(".").glob("**/Dockerfile*"))
 
 CI_REPORTS_DIR = Path(".reports")
@@ -133,7 +133,7 @@ def test(session: Session) -> None:
         "src",
         "-m",
         "pytest",
-        "tests",
+        "src/tests",
         "--junitxml",
         f"{pytest_session_dir}/pytest.xml",
         "--html",

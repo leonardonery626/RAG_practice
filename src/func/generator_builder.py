@@ -3,7 +3,7 @@ import logging
 
 import torch
 
-from func.retriever_builder import RetrieverBuilder
+from src.func.retriever_builder import RetrieverBuilder
 
 logger = logging.getLogger(__name__)
 

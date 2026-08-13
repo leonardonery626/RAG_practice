@@ -7,7 +7,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from func.retriever_builder import RetrieverBuilder
+from src.func.retriever_builder import RetrieverBuilder
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from func.generator_builder import Generator
+from src.func.generator_builder import Generator
 
 logger = logging.getLogger(__name__)
 

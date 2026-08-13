@@ -10,7 +10,7 @@ from typing import Any
 
 import pdfplumber
 
-from tools.file_finder import DEFAULT_DATA_DIR, get_pdf_file
+from src.tools.file_finder import DEFAULT_DATA_DIR, get_pdf_file
 
 logger = logging.getLogger(__name__)
 

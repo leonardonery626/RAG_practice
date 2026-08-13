@@ -4,8 +4,8 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from func.retriever_builder import RetrieverBuilder as Retriever
-from func.generator_builder import Generator
+from src.func.retriever_builder import RetrieverBuilder as Retriever
+from src.func.generator_builder import Generator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def generate_endpoint(generation_request: GenerationRequest):
 
 def main() -> None:
     uvicorn.run(
-        "web_server:app",
+        "src.local_server.web_server:app",
         host="127.0.0.1",
         port=8011,
         reload=False,
