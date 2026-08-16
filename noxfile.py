@@ -74,7 +74,9 @@ def format(session: Session) -> None:
 @nox.session(python=PYTHON_VERSIONS[-1])
 def lint(session: Session) -> None:
     """Run lint checks and generate CI-friendly reports."""
-    session.run("uv", "sync", "--active", "--locked", "--only-group=lint", external=True)
+    session.run(
+        "uv", "sync", "--active", "--locked", "--only-group=lint", external=True
+    )
 
     shutil.rmtree(LINTER_DIR, ignore_errors=True)
     LINTER_DIR.mkdir(parents=True, exist_ok=True)
