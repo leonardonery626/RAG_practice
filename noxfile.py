@@ -98,12 +98,12 @@ def lint(session: Session) -> None:
         )
 
     session.run(
-    "uv",
-    "run",
-    "junit2html",
-    str(LINTER_DIR / "ruff.xml"),
-    str(LINTER_DIR / "ruff.html"),
-    external=True,
+        "uv",
+        "run",
+        "junit2html",
+        str(LINTER_DIR / "ruff.xml"),
+        str(LINTER_DIR / "ruff.html"),
+        external=True,
     )
     session.run("uv", "run", "ruff", "check", *LINT_TARGETS, external=True)
 
