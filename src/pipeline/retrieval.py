@@ -1,13 +1,11 @@
 import argparse
 import logging
-import sys
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
 from src.func.retriever_builder import RetrieverBuilder
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +36,7 @@ def main() -> None:
         print(f"Score: {result['score']:.4f}")
         print(f"Text: {result['chunk']['text'][:200]}...")
         print("-" * 80)
+
 
 if __name__ == "__main__":
     main()

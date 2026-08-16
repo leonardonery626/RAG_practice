@@ -4,8 +4,8 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from src.func.retriever_builder import RetrieverBuilder as Retriever
 from src.func.generator_builder import Generator
+from src.func.retriever_builder import RetrieverBuilder as Retriever
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,8 +20,10 @@ app = FastAPI(title="RAG Retriever")
 # Request schemas
 # ---------------------------------------------------------------------------
 
+
 class RetrievalRequest(BaseModel):
     prompt: str
+
 
 class GenerationRequest(BaseModel):
     prompt: str
@@ -38,7 +40,9 @@ def retrieval_endpoint(retrieval_request: RetrievalRequest):
     logger.info("Starting retrieval for prompt: %s", retrieval_request.prompt)
     try:
         results_list = retriever.retrieved_context()
-        logger.info("Retrieval completed successfully. Retrieved %d chunks.", len(results_list))
+        logger.info(
+            "Retrieval completed successfully. Retrieved %d chunks.", len(results_list)
+        )
         return results_list
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Retrieval failed: {e}") from e
@@ -71,4 +75,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

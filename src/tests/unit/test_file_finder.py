@@ -22,11 +22,15 @@ class TestGetChunksFile:
 
         assert result == expected
 
-    def test_raises_file_not_found_when_no_json_present(self, empty_data_dir: Path) -> None:
+    def test_raises_file_not_found_when_no_json_present(
+        self, empty_data_dir: Path
+    ) -> None:
         with pytest.raises(FileNotFoundError, match="No JSON chunks file found"):
             get_chunks_file(empty_data_dir)
 
-    def test_raises_value_error_when_multiple_json_files_present(self, tmp_path: Path) -> None:
+    def test_raises_value_error_when_multiple_json_files_present(
+        self, tmp_path: Path
+    ) -> None:
         (tmp_path / "a.json").write_text("[]", encoding="utf-8")
         (tmp_path / "b.json").write_text("[]", encoding="utf-8")
 
@@ -50,7 +54,9 @@ class TestGetIndexFile:
 
         assert result == expected
 
-    def test_returns_default_path_when_none_exists_yet(self, empty_data_dir: Path) -> None:
+    def test_returns_default_path_when_none_exists_yet(
+        self, empty_data_dir: Path
+    ) -> None:
         result = get_index_file(empty_data_dir)
 
         assert result == empty_data_dir / "index.faiss"
@@ -61,7 +67,9 @@ class TestGetIndexFile:
 
         assert result == empty_data_dir / "custom.faiss"
 
-    def test_raises_value_error_when_multiple_faiss_files_present(self, tmp_path: Path) -> None:
+    def test_raises_value_error_when_multiple_faiss_files_present(
+        self, tmp_path: Path
+    ) -> None:
         (tmp_path / "a.faiss").write_bytes(b"")
         (tmp_path / "b.faiss").write_bytes(b"")
 
@@ -78,11 +86,15 @@ class TestGetPdfFile:
 
         assert result == expected
 
-    def test_raises_file_not_found_when_no_pdf_present(self, empty_data_dir: Path) -> None:
+    def test_raises_file_not_found_when_no_pdf_present(
+        self, empty_data_dir: Path
+    ) -> None:
         with pytest.raises(FileNotFoundError, match="No PDF file found"):
             get_pdf_file(empty_data_dir)
 
-    def test_raises_value_error_when_multiple_pdf_files_present(self, tmp_path: Path) -> None:
+    def test_raises_value_error_when_multiple_pdf_files_present(
+        self, tmp_path: Path
+    ) -> None:
         (tmp_path / "a.pdf").write_bytes(b"%PDF-1.4")
         (tmp_path / "b.pdf").write_bytes(b"%PDF-1.4")
 

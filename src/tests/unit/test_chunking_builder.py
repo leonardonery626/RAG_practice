@@ -23,7 +23,9 @@ def chunker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PDFChunker:
     """
     fake_pdf = tmp_path / "document.pdf"
     fake_pdf.write_bytes(b"%PDF-1.4")
-    monkeypatch.setattr("src.func.chunking_builder.get_pdf_file", lambda folder: fake_pdf)
+    monkeypatch.setattr(
+        "src.func.chunking_builder.get_pdf_file", lambda folder: fake_pdf
+    )
     return PDFChunker(chunk_size=4, overlap_ratio=0.5)
 
 
@@ -32,7 +34,8 @@ class TestInit:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            "src.func.chunking_builder.get_pdf_file", lambda folder: tmp_path / "doc.pdf"
+            "src.func.chunking_builder.get_pdf_file",
+            lambda folder: tmp_path / "doc.pdf",
         )
 
         result = PDFChunker(chunk_size=0, overlap_ratio=0.5)
@@ -43,7 +46,8 @@ class TestInit:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            "src.func.chunking_builder.get_pdf_file", lambda folder: tmp_path / "doc.pdf"
+            "src.func.chunking_builder.get_pdf_file",
+            lambda folder: tmp_path / "doc.pdf",
         )
 
         result = PDFChunker(chunk_size=10, overlap_ratio=0.3)
@@ -55,7 +59,9 @@ class TestChunkText:
     def test_empty_text_returns_no_chunks(self, chunker: PDFChunker) -> None:
         assert chunker.chunk_text("") == []
 
-    def test_text_shorter_than_chunk_size_returns_one_chunk(self, chunker: PDFChunker) -> None:
+    def test_text_shorter_than_chunk_size_returns_one_chunk(
+        self, chunker: PDFChunker
+    ) -> None:
         result = chunker.chunk_text("one two")
 
         assert result == ["one two"]

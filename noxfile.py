@@ -1,5 +1,5 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import nox
 from nox import Session
@@ -66,7 +66,9 @@ def etl_pipeline(session: Session) -> None:
 @nox.session(python=PYTHON_VERSIONS[-1])
 def format(session: Session) -> None:
     """Check import sorting and formatting with Ruff."""
-    session.run("uv", "sync", "--active", "--locked", "--only-group=format", external=True)
+    session.run(
+        "uv", "sync", "--active", "--locked", "--only-group=format", external=True
+    )
     session.run("uv", "run", "ruff", "check", ".", "--select", "I", external=True)
     session.run("uv", "run", "ruff", "format", ".", "--check", external=True)
 
@@ -110,14 +112,18 @@ def lint(session: Session) -> None:
 @nox.session(python=PYTHON_VERSIONS[-1])
 def typing(session: Session) -> None:
     """Run static type checks."""
-    session.run("uv", "sync", "--active", "--locked", "--only-group=typing", external=True)
-    session.run("uv", "run", "mypy", *TYPE_TARGETS, external=True)
+    session.run(
+        "uv", "sync", "--active", "--locked", "--only-group=typing", external=True
+    )
+    session.run("uv", "run", "mypy", "-p", "src", external=True)
 
 
 @nox.session(python=PYTHON_VERSIONS)
 def test(session: Session) -> None:
     """Run tests with coverage and emit CI reports."""
-    session.run("uv", "sync", "--active", "--locked", "--only-group=test", external=True)
+    session.run(
+        "uv", "sync", "--active", "--locked", "--only-group=test", external=True
+    )
 
     pytest_session_dir = PYTEST_DIR / f"python-{session.python}"
     coverage_session_dir = COVERAGE_DIR / f"python-{session.python}"

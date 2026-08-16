@@ -10,7 +10,9 @@ from src.pipeline import embedding
 
 
 class TestMain:
-    def test_builds_embedding_builder_and_processes(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_builds_embedding_builder_and_processes(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         fake_builder = MagicMock()
         builder_cls = MagicMock(return_value=fake_builder)
         monkeypatch.setattr(embedding, "EmbeddingBuilder", builder_cls)

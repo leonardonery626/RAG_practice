@@ -19,10 +19,7 @@ class RetrieverBuilder:
     model_name = DEFAULT_MODEL_NAME
     top_k = 3
 
-    def __init__(
-        self,
-        prompt: str
-       ) -> None:
+    def __init__(self, prompt: str) -> None:
         """Initialize the Retriever with a prompt.
 
         The chunks JSON file and the FAISS index file are both discovered
@@ -41,7 +38,6 @@ class RetrieverBuilder:
         self.index: faiss.Index | None = None
         self.chunks: list[dict[str, Any]] = []
         self._retrieved_results: list[dict[str, Any]] = []
-
 
     def load_model(self) -> SentenceTransformer:
         """Load and return the sentence embedding model.
@@ -100,7 +96,7 @@ class RetrieverBuilder:
     def retrieved_docs_json(self) -> list[dict[str, Any]]:
         """Retrieve top-k most similar chunks for the instance prompt.
 
-        Returns:    
+        Returns:
             A list of result dictionaries with rank, score, and chunk data.
         """
 
@@ -111,7 +107,9 @@ class RetrieverBuilder:
         query_vector = np.array([query_embedding], dtype=np.float32)
 
         # Similarity search
-        assert self.index is not None, "FAISS index is not loaded. Call load_index() first."
+        assert self.index is not None, (
+            "FAISS index is not loaded. Call load_index() first."
+        )
         scores, indices = self.index.search(query_vector, self.top_k)
 
         # Quality test: verify scores and indices are not empty or None
@@ -122,11 +120,13 @@ class RetrieverBuilder:
 
         results = []
         for rank, (score, idx) in enumerate(zip(scores[0], indices[0]), start=1):
-            results.append({
-                "rank": rank,
-                "score": float(score),
-                "chunk": self.chunks[idx],
-            })
+            results.append(
+                {
+                    "rank": rank,
+                    "score": float(score),
+                    "chunk": self.chunks[idx],
+                }
+            )
 
         self._retrieved_results = results
         logger.info("Retrieved %d chunks for prompt: %s", len(results), self.prompt)

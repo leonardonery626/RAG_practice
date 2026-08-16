@@ -1,14 +1,11 @@
 import argparse
 import logging
-import sys
 from pathlib import Path
 from typing import Any
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
 from src.func.chunking_builder import PDFChunker
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 OUTPUT_PATH = ROOT_DIR / "supporting_files" / "generated_chunks.json"
 

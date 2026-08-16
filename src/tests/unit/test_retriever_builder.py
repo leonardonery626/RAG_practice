@@ -37,7 +37,8 @@ class TestInit:
             "src.func.retriever_builder.get_index_file", lambda folder: fake_index_file
         )
         monkeypatch.setattr(
-            "src.func.retriever_builder.get_chunks_file", lambda folder: fake_chunks_file
+            "src.func.retriever_builder.get_chunks_file",
+            lambda folder: fake_chunks_file,
         )
 
         result = RetrieverBuilder(prompt="hello")
@@ -56,7 +57,9 @@ class TestLoadModel:
     ) -> None:
         fake_model = MagicMock()
         constructor = MagicMock(return_value=fake_model)
-        monkeypatch.setattr("src.func.retriever_builder.SentenceTransformer", constructor)
+        monkeypatch.setattr(
+            "src.func.retriever_builder.SentenceTransformer", constructor
+        )
 
         result = retriever.load_model()
 
@@ -71,7 +74,9 @@ class TestLoadIndex:
     ) -> None:
         fake_index = MagicMock()
         read_index_mock = MagicMock(return_value=fake_index)
-        monkeypatch.setattr("src.func.retriever_builder.faiss.read_index", read_index_mock)
+        monkeypatch.setattr(
+            "src.func.retriever_builder.faiss.read_index", read_index_mock
+        )
 
         result = retriever.load_index()
 
@@ -98,7 +103,9 @@ class TestGenerateEmbedding:
     ) -> None:
         fake_model = MagicMock()
         fake_model.encode.return_value = np.array([1.0, 2.0])
-        load_model_mock = MagicMock(side_effect=lambda: setattr(retriever, "_model", fake_model))
+        load_model_mock = MagicMock(
+            side_effect=lambda: setattr(retriever, "_model", fake_model)
+        )
         monkeypatch.setattr(retriever, "load_model", load_model_mock)
 
         result = retriever.generate_embedding("some text")
@@ -135,7 +142,9 @@ class TestRetrievedDocsJson:
         )
         retriever.index = fake_index
         monkeypatch.setattr(
-            retriever, "generate_embedding", MagicMock(return_value=np.array([1.0, 0.0]))
+            retriever,
+            "generate_embedding",
+            MagicMock(return_value=np.array([1.0, 0.0])),
         )
 
         result = retriever.retrieved_docs_json()
@@ -211,7 +220,9 @@ class TestRetrievedContextStr:
         monkeypatch.setattr(retriever, "load_model", MagicMock())
         monkeypatch.setattr(retriever, "load_index", MagicMock())
         monkeypatch.setattr(retriever, "load_chunks", MagicMock())
-        monkeypatch.setattr(retriever, "retrieved_docs_json", MagicMock(return_value=fake_results))
+        monkeypatch.setattr(
+            retriever, "retrieved_docs_json", MagicMock(return_value=fake_results)
+        )
 
         result = retriever.retrieved_context_str()
 

@@ -1,7 +1,8 @@
-from transformers import pipeline, AutoTokenizer
 import logging
+from typing import cast
 
 import torch
+from transformers import AutoTokenizer, pipeline
 
 from src.func.retriever_builder import RetrieverBuilder
 
@@ -77,8 +78,11 @@ class Generator:
                 "content": f"Context:\n{self.retrieved_text}\n\nQuestion: {self.prompt}",
             },
         ]
-        prompt_text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        prompt_text = cast(
+            str,
+            tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            ),
         )
         logger.info("Prompt built successfully")
         return prompt_text

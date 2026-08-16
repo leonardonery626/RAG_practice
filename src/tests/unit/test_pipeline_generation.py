@@ -21,7 +21,9 @@ def generation_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Import src.pipeline.generation with src.func.generator_builder faked out."""
     fake_generator_builder = ModuleType("src.func.generator_builder")
     fake_generator_builder.Generator = MagicMock(name="Generator")  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "src.func.generator_builder", fake_generator_builder)
+    monkeypatch.setitem(
+        sys.modules, "src.func.generator_builder", fake_generator_builder
+    )
     sys.modules.pop("src.pipeline.generation", None)
 
     import src.pipeline.generation as module
@@ -64,7 +66,9 @@ class TestMain:
         fake_generator.run.return_value = fake_result
         generator_cls = MagicMock(return_value=fake_generator)
         monkeypatch.setattr(generation_module, "Generator", generator_cls)
-        monkeypatch.setattr(generation_module, "get_parameters", MagicMock(return_value="hello"))
+        monkeypatch.setattr(
+            generation_module, "get_parameters", MagicMock(return_value="hello")
+        )
 
         result = generation_module.main()
 

@@ -10,7 +10,9 @@ from src.pipeline import retrieval
 
 
 class TestGetParameters:
-    def test_returns_the_prompt_from_cli_args(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_returns_the_prompt_from_cli_args(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setattr("sys.argv", ["retrieve", "--prompt", "What is RAG?"])
 
         result = retrieval.get_parameters()
@@ -29,7 +31,9 @@ class TestMain:
         fake_retriever.retrieved_context.return_value = fake_results
         retriever_cls = MagicMock(return_value=fake_retriever)
         monkeypatch.setattr(retrieval, "RetrieverBuilder", retriever_cls)
-        monkeypatch.setattr(retrieval, "get_parameters", MagicMock(return_value="hello"))
+        monkeypatch.setattr(
+            retrieval, "get_parameters", MagicMock(return_value="hello")
+        )
 
         retrieval.main()
 

@@ -21,7 +21,9 @@ def web_server_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Import src.local_server.web_server with generator_builder faked out."""
     fake_generator_builder = ModuleType("src.func.generator_builder")
     fake_generator_builder.Generator = MagicMock(name="Generator")  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "src.func.generator_builder", fake_generator_builder)
+    monkeypatch.setitem(
+        sys.modules, "src.func.generator_builder", fake_generator_builder
+    )
     sys.modules.pop("src.local_server.web_server", None)
 
     import src.local_server.web_server as module
@@ -36,7 +38,10 @@ def client(web_server_module: ModuleType) -> TestClient:
 
 class TestRetrievalEndpoint:
     def test_returns_retrieved_results_on_success(
-        self, web_server_module: ModuleType, client: TestClient, monkeypatch: pytest.MonkeyPatch
+        self,
+        web_server_module: ModuleType,
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         fake_results = [{"rank": 1, "score": 0.9, "chunk": {"text": "hello"}}]
         fake_retriever = MagicMock()
@@ -51,7 +56,10 @@ class TestRetrievalEndpoint:
         assert response.json() == fake_results
 
     def test_returns_500_when_retrieval_raises(
-        self, web_server_module: ModuleType, client: TestClient, monkeypatch: pytest.MonkeyPatch
+        self,
+        web_server_module: ModuleType,
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         fake_retriever = MagicMock()
         fake_retriever.retrieved_context.side_effect = RuntimeError("index missing")
@@ -67,10 +75,17 @@ class TestRetrievalEndpoint:
 
 class TestGenerateEndpoint:
     def test_returns_generated_answer_on_success(
-        self, web_server_module: ModuleType, client: TestClient, monkeypatch: pytest.MonkeyPatch
+        self,
+        web_server_module: ModuleType,
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         fake_generator = MagicMock()
-        fake_generator.run.return_value = {"answer": "Paris", "prompt": "hi", "retrieved_text": ""}
+        fake_generator.run.return_value = {
+            "answer": "Paris",
+            "prompt": "hi",
+            "retrieved_text": "",
+        }
         monkeypatch.setattr(
             web_server_module, "Generator", MagicMock(return_value=fake_generator)
         )
@@ -81,7 +96,10 @@ class TestGenerateEndpoint:
         assert response.json() == {"generated_answer": "Paris"}
 
     def test_returns_500_when_generation_raises(
-        self, web_server_module: ModuleType, client: TestClient, monkeypatch: pytest.MonkeyPatch
+        self,
+        web_server_module: ModuleType,
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         fake_generator = MagicMock()
         fake_generator.run.side_effect = RuntimeError("model unavailable")

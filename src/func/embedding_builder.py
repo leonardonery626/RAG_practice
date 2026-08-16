@@ -19,6 +19,7 @@ EmbeddingArray = NDArray[np.float32]
 
 class EmbeddingBuilder:
     """Build embeddings for chunk data and persist them to a FAISS index."""
+
     model_name = MODEL_NAME
     batch_size = 32
 
@@ -104,7 +105,9 @@ class EmbeddingBuilder:
         index.add(embeddings)
         return index
 
-    def save_index(self, index: faiss.IndexFlatIP, output_path: str | Path | None = None) -> None:
+    def save_index(
+        self, index: faiss.IndexFlatIP, output_path: str | Path | None = None
+    ) -> None:
         """Persist the FAISS index to disk."""
         path = Path(output_path or self.index_file)
         path.parent.mkdir(parents=True, exist_ok=True)

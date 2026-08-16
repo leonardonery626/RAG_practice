@@ -28,7 +28,9 @@ def generator_module() -> ModuleType:
     sys.modules.pop("src.func.generator_builder", None)
 
     with (
-        patch("transformers.AutoTokenizer.from_pretrained", return_value=fake_tokenizer),
+        patch(
+            "transformers.AutoTokenizer.from_pretrained", return_value=fake_tokenizer
+        ),
         patch("transformers.pipelines.pipeline", return_value=fake_pipeline_callable),
         patch("torch.cuda.is_available", return_value=False),
     ):
@@ -38,12 +40,12 @@ def generator_module() -> ModuleType:
 
 
 @pytest.fixture
-def generator(generator_module: ModuleType) -> Any:  # noqa: ANN401 - fixture return is the SUT
+def generator(generator_module: ModuleType):  # noqa: ANN401 - fixture return is the SUT
     return generator_module.Generator(prompt="What is the capital of France?")
 
 
 class TestInit:
-    def test_sets_prompt_and_empty_state(self, generator: Any) -> None:
+    def test_sets_prompt_and_empty_state(self, generator) -> None:
         assert generator.prompt == "What is the capital of France?"
         assert generator.retrieved_text == ""
         assert generator.generated_answer == ""
@@ -51,7 +53,10 @@ class TestInit:
 
 class TestLoadRetriever:
     def test_delegates_to_retriever_builder_and_stores_result(
-        self, generator: Any, monkeypatch: pytest.MonkeyPatch, generator_module: ModuleType
+        self,
+        generator,
+        monkeypatch: pytest.MonkeyPatch,
+        generator_module: ModuleType,
     ) -> None:
         fake_retriever = MagicMock()
         fake_retriever.retrieved_context_str.return_value = "some retrieved context"
@@ -63,18 +68,20 @@ class TestLoadRetriever:
 
         result = generator.load_retriever()
 
-        generator_module.RetrieverBuilder.assert_called_once_with(prompt=generator.prompt)
+        generator_module.RetrieverBuilder.assert_called_once_with(
+            prompt=generator.prompt
+        )
         assert result == "some retrieved context"
         assert generator.retrieved_text == "some retrieved context"
 
 
 class TestBuildPrompt:
-    def test_raises_when_retrieved_text_is_empty(self, generator: Any) -> None:
+    def test_raises_when_retrieved_text_is_empty(self, generator) -> None:
         with pytest.raises(ValueError, match="Retrieved text is empty"):
             generator.build_prompt()
 
     def test_builds_chat_template_with_context_and_question(
-        self, generator: Any, generator_module: ModuleType
+        self, generator, generator_module: ModuleType
     ) -> None:
         generator.retrieved_text = "Paris is the capital of France."
         generator_module.tokenizer.apply_chat_template.return_value = "RENDERED_PROMPT"
@@ -91,7 +98,7 @@ class TestBuildPrompt:
 
 class TestGenerateAnswer:
     def test_extracts_only_the_newly_generated_text(
-        self, generator: Any, generator_module: ModuleType
+        self, generator, generator_module: ModuleType
     ) -> None:
         prompt_text = "PROMPT"
         generator_module.generator.return_value = [
@@ -102,16 +109,22 @@ class TestGenerateAnswer:
 
         assert result == "the answer"
         assert generator.generated_answer == "the answer"
-        generator_module.generator.assert_called_once_with(prompt_text, max_new_tokens=256)
+        generator_module.generator.assert_called_once_with(
+            prompt_text, max_new_tokens=256
+        )
 
 
 class TestRun:
     def test_executes_full_workflow_and_returns_expected_shape(
-        self, generator: Any, monkeypatch: pytest.MonkeyPatch
+        self, generator, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(generator, "load_retriever", MagicMock(return_value="ctx"))
-        monkeypatch.setattr(generator, "build_prompt", MagicMock(return_value="PROMPT_TEXT"))
-        monkeypatch.setattr(generator, "generate_answer", MagicMock(return_value="the answer"))
+        monkeypatch.setattr(
+            generator, "build_prompt", MagicMock(return_value="PROMPT_TEXT")
+        )
+        monkeypatch.setattr(
+            generator, "generate_answer", MagicMock(return_value="the answer")
+        )
         generator.retrieved_text = "ctx"
 
         result = generator.run()

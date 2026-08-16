@@ -13,9 +13,21 @@ import pytest
 def sample_chunks() -> list[dict[str, Any]]:
     """A small, representative set of chunk records."""
     return [
-        {"id": "chunk-1", "text": "The first chunk of text.", "metadata": {"page": 1, "chunk_number": 1}},
-        {"id": "chunk-2", "text": "The second chunk of text.", "metadata": {"page": 1, "chunk_number": 2}},
-        {"id": "chunk-3", "text": "The third chunk of text.", "metadata": {"page": 2, "chunk_number": 3}},
+        {
+            "id": "chunk-1",
+            "text": "The first chunk of text.",
+            "metadata": {"page": 1, "chunk_number": 1},
+        },
+        {
+            "id": "chunk-2",
+            "text": "The second chunk of text.",
+            "metadata": {"page": 1, "chunk_number": 2},
+        },
+        {
+            "id": "chunk-3",
+            "text": "The third chunk of text.",
+            "metadata": {"page": 2, "chunk_number": 3},
+        },
     ]
 
 

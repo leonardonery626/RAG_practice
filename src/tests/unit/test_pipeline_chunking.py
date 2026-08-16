@@ -28,7 +28,9 @@ class TestGetParameters:
 
 
 class TestParseArgs:
-    def test_parses_defaults_when_no_flags_given(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_parses_defaults_when_no_flags_given(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setattr("sys.argv", ["chunk_pdf"])
 
         args = chunking.parse_args()
@@ -71,7 +73,9 @@ class TestMain:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         fake_chunker = MagicMock()
-        monkeypatch.setattr(chunking, "PDFChunker", MagicMock(return_value=fake_chunker))
+        monkeypatch.setattr(
+            chunking, "PDFChunker", MagicMock(return_value=fake_chunker)
+        )
         pdf_path = tmp_path / "input.pdf"
         params = {
             "output_path": tmp_path / "out.json",
@@ -89,7 +93,9 @@ class TestMain:
     def test_falls_back_to_cli_args_when_params_not_given(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setattr("sys.argv", ["chunk_pdf", "--chunk-size", "50", "--overlap-ratio", "0.0"])
+        monkeypatch.setattr(
+            "sys.argv", ["chunk_pdf", "--chunk-size", "50", "--overlap-ratio", "0.0"]
+        )
         fake_chunker = MagicMock()
         chunker_cls = MagicMock(return_value=fake_chunker)
         monkeypatch.setattr(chunking, "PDFChunker", chunker_cls)

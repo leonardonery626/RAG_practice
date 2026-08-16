@@ -34,7 +34,8 @@ class TestInit:
         fake_chunks_file = tmp_path / "chunks.json"
         fake_index_file = tmp_path / "index.faiss"
         monkeypatch.setattr(
-            "src.func.embedding_builder.get_chunks_file", lambda folder: fake_chunks_file
+            "src.func.embedding_builder.get_chunks_file",
+            lambda folder: fake_chunks_file,
         )
         monkeypatch.setattr(
             "src.func.embedding_builder.get_index_file", lambda folder: fake_index_file
@@ -60,7 +61,10 @@ class TestLoadChunks:
         assert result == sample_chunks
 
     def test_loads_json_from_explicit_path(
-        self, builder: EmbeddingBuilder, tmp_path: Path, sample_chunks: list[dict[str, Any]]
+        self,
+        builder: EmbeddingBuilder,
+        tmp_path: Path,
+        sample_chunks: list[dict[str, Any]],
     ) -> None:
         explicit_path = tmp_path / "other_chunks.json"
         explicit_path.write_text(json.dumps(sample_chunks), encoding="utf-8")
@@ -76,7 +80,9 @@ class TestLoadModel:
     ) -> None:
         fake_model = MagicMock()
         constructor = MagicMock(return_value=fake_model)
-        monkeypatch.setattr("src.func.embedding_builder.SentenceTransformer", constructor)
+        monkeypatch.setattr(
+            "src.func.embedding_builder.SentenceTransformer", constructor
+        )
 
         result = builder.load_model()
 
@@ -87,7 +93,9 @@ class TestLoadModel:
         self, builder: EmbeddingBuilder, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         constructor = MagicMock(return_value=MagicMock())
-        monkeypatch.setattr("src.func.embedding_builder.SentenceTransformer", constructor)
+        monkeypatch.setattr(
+            "src.func.embedding_builder.SentenceTransformer", constructor
+        )
 
         builder.load_model(model_name="custom-model")
 
