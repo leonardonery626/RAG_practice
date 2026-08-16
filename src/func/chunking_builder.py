@@ -10,6 +10,8 @@ from typing import Any
 
 import pdfplumber
 
+from src.tools.file_finder import DEFAULT_DATA_DIR, get_pdf_file
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,8 +25,11 @@ class PDFChunker:
     ) -> None:
         self.chunk_size = max(chunk_size, 1)
         self.overlap = int(self.chunk_size * overlap_ratio)
+        # The PDF file is discovered from the declared folder, not hardcoded.
+        self.pdf_file = get_pdf_file(DEFAULT_DATA_DIR)
 
-    def extract_pages(self, pdf_path: str | Path) -> list[dict[str, Any]]:
+    @staticmethod
+    def extract_pages(pdf_path: str | Path) -> list[dict[str, Any]]:
         """Extract text from all PDF pages."""
         pages = []
 
@@ -57,6 +62,7 @@ class PDFChunker:
         if not words:
             return []
 
+        # Calculate the number of words to overlap between chunks, ensuring it is within valid bounds.
         overlap = min(
             max(self.overlap, 0),
             self.chunk_size - 1,
@@ -109,8 +115,9 @@ class PDFChunker:
         chunks: list[dict[str, Any]],
         output_path: str | Path,
     ) -> None:
-        """Persist chunks as JSON."""
+        """Persist chunks as JSON, overwriting any existing file."""
         path = Path(output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         with path.open("w", encoding="utf-8") as file:
             json.dump(
@@ -123,11 +130,11 @@ class PDFChunker:
 
     def process(
         self,
-        pdf_path: str | Path,
         output_path: str | Path,
+        pdf_path: str | Path | None = None,
     ) -> list[dict[str, Any]]:
         """Run the complete extraction and chunking workflow."""
-        pages = self.extract_pages(pdf_path)
+        pages = self.extract_pages(pdf_path or self.pdf_file)
         chunks = self.build_chunks(pages)
         self.save_chunks(chunks, output_path)
 
