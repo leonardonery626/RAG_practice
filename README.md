@@ -1,107 +1,152 @@
 # RAG Practice
 
-A modular RAG (Retrieval-Augmented Generation) pipeline built entirely with open source tools. Demonstrates the core retrieval side of RAG — chunking a PDF, generating vector embeddings, and performing similarity search — with clear separation between stages so each can be tested and understood independently.
+A modular RAG (Retrieval-Augmented Generation) pipeline built entirely with open source tools. Demonstrates the full RAG lifecycle — chunking a PDF, generating vector embeddings, similarity search, and LLM-backed answer generation — with clear separation between stages so each can be tested and understood independently. The project also doubles as a reference for good Python dev practices: isolated environments, linting, type checking, automated tests with coverage gates, and CI.
 
 ## Pipeline Overview
 
 ```
-PDF Document  ──[chunking]──>  JSON Chunks  ──[embeddings]──>  FAISS Index  ──[retrieval]──>  Top-K Results
+PDF Document ─[chunking]─> JSON Chunks ─[embeddings]─> FAISS Index ─[retrieval]─> Top-K Chunks ─[generation]─> LLM Answer
 ```
 
-Three isolated stages, each producing an artifact consumed by the next:
+Four isolated stages, each producing an artifact consumed by the next:
 
 | Stage | Input | Output | Command |
 |-------|-------|--------|---------|
-| **Chunking** | PDF file | `generated_chunks.json` | `nox -s chunking` |
-| **Embeddings** | `generated_chunks.json` | `generated_chunks_index.faiss` | `nox -s embeddings` |
-| **Retrieval** | FAISS index + chunks JSON | Terminal results | `python src/retrieval.py --top-k N --prompt "..."` |
+| **Chunking** | PDF file | `generated_chunks.json` | `uv run chunk_pdf` |
+| **Embeddings** | `generated_chunks.json` | `index.faiss` | `uv run build_embeddings` |
+| **Retrieval** | FAISS index + chunks JSON | Terminal results | `uv run python -m src.pipeline.retrieval --prompt "..."` |
+| **Generation** | Retrieved chunks + prompt | LLM-generated answer | `uv run python -m src.pipeline.generation --prompt "..."` |
+
+Retrieval and generation are also exposed over HTTP via a small FastAPI server — see [Local Server](#local-server-fastapi).
 
 ## Why `uv`
 
 https://github.com/astral-sh/uv is a fast Python package and environment manager. This project uses uv to manage dependencies, create isolated environments, and run commands reproducibly without requiring global package installations.
 
-
 ## Automation with Nox
 
-[Nox](https://nox.thea.codes/) is used to automate the pipeline in isolated, reproducible environments.
+[Nox](https://nox.thea.codes/) is used to automate environment setup, linting, typing, tests, and the pipeline itself in isolated, reproducible environments.
 
 ### Sessions
 
-Three sessions are defined in [`noxfile.py`](noxfile.py):
+Defined in [`noxfile.py`](noxfile.py):
 
 - **`dev`** — Creates/updates the project virtualenv with all dependencies (`uv sync --all-extras --all-groups`). Run this first.
-- **`chunking`** — Runs `chunk_pdf` to split the PDF into overlapping text chunks and save them as JSON.
-- **`embeddings`** — Runs `build_embeddings` to generate vector embeddings from the chunks and build the FAISS index.
+- **`etl_pipeline`** — Runs `chunk_pdf` followed by `build_embeddings`, producing the chunks JSON and the FAISS index in one go.
+- **`format`** — Checks import sorting and formatting with Ruff.
+- **`lint`** — Runs Ruff lint checks and writes a JUnit/HTML report to `.reports/linter/`.
+- **`typing`** — Runs `mypy` over `src`.
+- **`test`** — Runs the test suite with `pytest` + `coverage`, writing reports to `.reports/pytest/` and `.reports/coverage/`.
+- **`lock`** — Upgrades `uv.lock`.
 
-### Session Isolation
+Each nox session runs in its own isolated virtual environment under `.nox/`, ensuring a clean and reproducible execution environment. The project's main virtual environment is managed separately in `.venv`, created by the `dev` session.
 
-Each nox session runs in its own isolated virtual environment under .nox/, ensuring a clean and reproducible execution environment. The project's main virtual environment is managed separately in .venv, which is created by the dev session.
-
-### Default Session Order
-
-Running `nox` without arguments executes `dev`, then `chunking`, then `embeddings` in sequence:
-
-```bash
-nox
-```
-
-You can also run sessions individually:
+Running `nox` without arguments runs every session in the file above in order. In practice you'll usually run sessions individually:
 
 ```bash
-nox -s dev        # sync environment
-nox -s chunking   # run chunking only
-nox -s embeddings # run embeddings only
+nox -s dev           # sync environment (run this first)
+nox -s etl_pipeline  # chunk the PDF and build the FAISS index
+nox -s format        # check formatting/import order
+nox -s lint          # lint with Ruff
+nox -s typing        # type-check with mypy
+nox -s test          # run tests with coverage
 ```
+
+These same `format` / `lint` / `typing` / `test` sessions run in CI on every pull request — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Folder Structure
 
 ```
-├── pyproject.toml           # Project config, dependencies, CLI entry points
-├── noxfile.py               # Automation sessions
-├── uv.lock                  # Locked dependency tree
-├── .python-version          # Python version pinning
+├── pyproject.toml               # Project config, dependencies, CLI entry points
+├── noxfile.py                   # Automation sessions
+├── uv.lock                      # Locked dependency tree
+├── .python-version              # Python version pinning
+├── .github/workflows/ci.yml     # CI: format, lint, typing, test on every PR
 ├── src/
-│   ├── chunking.py          # CLI entry point: PDF → JSON chunks
-│   ├── embedding.py         # CLI entry point: chunks → FAISS index
-│   └── retrieval.py         # Script: query the FAISS index (run directly)
-├── tools/
-│   ├── chunking_builder.py  # Core logic: PDF text extraction + word-level chunking
-│   ├── embedding_builder.py # Core logic: embedding generation + FAISS index building
-│   └── retriever_builder.py # Core logic: similarity search against the index
-├── supporting_files/        # Place your PDF here; outputs land here too
-├── tests/                   # Test directory (empty — add your own)
-└── .nox/                    # Per-session virtualenvs (auto-generated by nox)
+│   ├── pipeline/                # Thin CLI entry points that wire up the func builders
+│   │   ├── chunking.py          #   PDF -> JSON chunks
+│   │   ├── embedding.py         #   chunks -> FAISS index
+│   │   ├── retrieval.py         #   query the FAISS index
+│   │   └── generation.py        #   retrieve + generate an LLM answer
+│   ├── func/                    # Reusable builder classes containing all core logic
+│   │   ├── chunking_builder.py  #   PDF text extraction + word-level chunking
+│   │   ├── embedding_builder.py #   embedding generation + FAISS index building
+│   │   ├── retriever_builder.py #   similarity search against the index
+│   │   └── generator_builder.py #   RAG prompt assembly + local LLM generation
+│   ├── tools/
+│   │   └── file_finder.py       # Locates the PDF/JSON/FAISS files in supporting_files/
+│   ├── local_server/
+│   │   └── web_server.py        # FastAPI app exposing /rag/retrieval and /rag/generate
+│   └── tests/                   # pytest suite (unit tests for every module above)
+├── supporting_files/            # Place your PDF here; outputs land here too
+└── .nox/                        # Per-session virtualenvs (auto-generated by nox)
 ```
 
 ### Architecture
 
-- **`src/`** — Thin CLI entry points that wire up the tools. Registered as console scripts in `pyproject.toml`.
-- **`tools/`** — Reusable builder classes containing all core logic. Importable by tests or other scripts.
-- **`supporting_files/`** — The single data directory. Source PDFs, generated chunk JSON, and the FAISS index all live here.
+- **`src/pipeline/`** — Thin CLI entry points that wire up the builders. `chunk_pdf` and `build_embeddings` are registered as console scripts in `pyproject.toml`; `retrieval` and `generation` are run as modules (`python -m ...`).
+- **`src/func/`** — Reusable builder classes containing all core logic. Importable by tests, the pipeline scripts, or the local server.
+- **`src/tools/`** — Small shared utilities, currently `file_finder.py`, which locates the single PDF/JSON/FAISS file in `supporting_files/` so no paths are hardcoded.
+- **`src/local_server/`** — Optional FastAPI server that exposes retrieval and generation over HTTP.
+- **`supporting_files/`** — The single data directory. Source PDF, generated chunk JSON, and the FAISS index all live here; each `file_finder` lookup expects exactly one file of its type in this folder.
 
 ## How to Use
 
 ### 1. Prerequisites
 
-Install `uv` (one-time):
+Install `uv` (one-time) — see the [official install instructions](https://docs.astral.sh/uv/getting-started/installation/), e.g. on macOS/Linux:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 
 ### 2. Add Your PDF
 
-Place a PDF file in `supporting_files/`. By default the pipeline expects a file named as configured in the entry points; you can edit `src/chunking.py` to point to your own file, or replace the existing PDF.
+Place a single PDF file in `supporting_files/`. `file_finder.get_pdf_file` expects exactly one `*.pdf` in that folder — it raises if none or more than one is found.
 
-### 3. Run the Pipeline
+### 3. Sync the Environment
 
-Run the command nox in your CLI
+```bash
+nox -s dev
+```
 
-# Or step by step:
-nox -s dev        # first time only — sync environment
-nox -s chunking   # generate supporting_files/generated_chunks.json
-nox -s embeddings # generate supporting_files/generated_chunks_index.faiss
+### 4. Run Chunking and Embeddings
 
-### 4. Run the Pipeline
-With PDF file, chunks file and FAISS embeddings file in the supporting_files folder, run the following command in the CLI to test the retrieval (top 3 most relevant chunks for example):
+```bash
+uv run chunk_pdf          # -> supporting_files/generated_chunks.json
+uv run build_embeddings   # -> supporting_files/index.faiss
+```
 
-uv run retrieval.py --top-k 3 --prompt "write your prompt here"
+Or run both via nox: `nox -s etl_pipeline`.
+
+### 5. Retrieve
+
+```bash
+uv run python -m src.pipeline.retrieval --prompt "write your prompt here"
+```
+
+Prints the top-3 most similar chunks (top-k is currently fixed via `RetrieverBuilder.top_k`, not a CLI flag).
+
+### 6. Generate an Answer
+
+```bash
+uv run python -m src.pipeline.generation --prompt "write your prompt here"
+```
+
+Retrieves context, builds a chat prompt, and generates an answer locally with `microsoft/Phi-3-mini-4k-instruct` via `transformers`. The model is downloaded and loaded into memory on first run, so expect a slower first invocation and a GPU is used automatically if `torch.cuda.is_available()`.
+
+## Local Server (FastAPI)
+
+`src/local_server/web_server.py` exposes the same retrieval and generation logic over HTTP:
+
+```bash
+uv run local_server
+```
+
+Starts a Uvicorn server at `http://127.0.0.1:8011` with two endpoints:
+
+- `POST /rag/retrieval` — body `{"prompt": "..."}`, returns the ranked list of retrieved chunks.
+- `POST /rag/generate` — body `{"prompt": "..."}`, returns `{"generated_answer": "..."}`.
 
 ## FAISS — Vector Similarity Search
 
@@ -111,4 +156,14 @@ In this pipeline:
 
 - **Index type**: `IndexFlatIP` (inner product). Since embeddings are L2-normalized, inner product is equivalent to cosine similarity, giving a natural similarity score between 0 and 1.
 - **Storage**: The index is serialized to disk as a single `.faiss` binary file — no database server needed.
-- **Search**: At query time, the user's prompt is embedded with the same `SentenceTransformer` model, then FAISS finds the top-K nearest vectors in the index by brute-force exact search.
+- **Search**: At query time, the user's prompt is embedded with the same `SentenceTransformer` model (`BAAI/bge-small-en-v1.5`), then FAISS finds the top-K nearest vectors in the index by brute-force exact search.
+
+## Testing & Quality Gates
+
+The test suite lives in `src/tests/` (unit tests under `src/tests/unit/`) and covers every builder, pipeline entry point, `file_finder`, and the FastAPI server. Run it with:
+
+```bash
+nox -s test
+```
+
+Coverage is measured over `src` with a minimum threshold of 80% (`[tool.coverage.report] fail_under = 80` in `pyproject.toml`); `nox -s lint` and `nox -s typing` enforce Ruff and mypy respectively. All four checks (`format`, `lint`, `typing`, `test`) run automatically in CI on every pull request via [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
