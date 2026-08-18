@@ -11,6 +11,8 @@ import numpy as np
 from numpy.typing import NDArray
 from sentence_transformers import SentenceTransformer
 
+from src.tools.file_finder import DEFAULT_DATA_DIR, get_chunks_file, get_index_file
+
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
 EmbeddingArray = NDArray[np.float32]
 
@@ -18,15 +20,23 @@ EmbeddingArray = NDArray[np.float32]
 class EmbeddingBuilder:
     """Build embeddings for chunk data and persist them to a FAISS index."""
 
-    def __init__(
-        self,
-        chunks_path: str | Path,
-        index_path: str | Path,
-        model_name: str = MODEL_NAME,
-    ) -> None:
-        self.chunks_path = Path(chunks_path)
-        self.index_path = Path(index_path)
-        self.model_name = model_name
+    model_name = MODEL_NAME
+    batch_size = 32
+
+    def __init__(self) -> None:
+        """Initialize the Embedder by resolving the chunks and index files.
+
+        The chunks JSON file and the FAISS index file are both discovered
+        from the declared supporting-files folder, so no paths are hardcoded.
+        """
+        self.chunks_file = get_chunks_file(DEFAULT_DATA_DIR)
+        self.index_file = get_index_file(DEFAULT_DATA_DIR)
+
+        # Additional attributes for chunks, embeddings, FAISS index, and the model
+        self.chunks: list[dict[str, Any]] = []
+        self.embeddings: np.ndarray | None = None
+        self.index: faiss.IndexFlatIP | None = None
+        self._model: SentenceTransformer | None = None
 
     def load_chunks(self, file_path: str | Path | None = None) -> list[dict[str, Any]]:
         """Load chunk data from a JSON file.
@@ -41,7 +51,7 @@ class EmbeddingBuilder:
         list[dict[str, Any]]
             Loaded chunk records.
         """
-        path = Path(file_path or self.chunks_path)
+        path = Path(file_path or self.chunks_file)
         with path.open("r", encoding="utf-8") as handle:
             return json.load(handle)
 
@@ -88,16 +98,6 @@ class EmbeddingBuilder:
         )
         return np.asarray(embeddings, dtype=np.float32)
 
-    # The chunks are assigned here to be used later for retrieval, so we store them directly in the chunk dictionaries.
-    def attach_embeddings(
-        self,
-        chunks: list[dict[str, Any]],
-        embeddings: EmbeddingArray,
-    ) -> None:
-        """Store embedding values directly on each chunk dictionary."""
-        for chunk, embedding in zip(chunks, embeddings, strict=False):
-            chunk["embedding"] = embedding.tolist()
-
     def build_faiss_index(self, embeddings: EmbeddingArray) -> faiss.IndexFlatIP:
         """Build a FAISS index from the generated embeddings."""
         dimension = embeddings.shape[1]
@@ -105,23 +105,19 @@ class EmbeddingBuilder:
         index.add(embeddings)
         return index
 
-    def save_index(self, index: faiss.IndexFlatIP, output_path: str | Path | None = None) -> None:
+    def save_index(
+        self, index: faiss.IndexFlatIP, output_path: str | Path | None = None
+    ) -> None:
         """Persist the FAISS index to disk."""
-        path = Path(output_path or self.index_path)
+        path = Path(output_path or self.index_file)
         path.parent.mkdir(parents=True, exist_ok=True)
         faiss.write_index(index, str(path))
 
-    def process(
-        self,
-        chunks_path: str | Path | None = None,
-        index_path: str | Path | None = None,
-        model_name: str | None = None,
-    ) -> Path:
+    def process(self) -> Path:
         """Load chunks, create embeddings, and save a FAISS index."""
-        model = self.load_model(model_name=model_name)
-        chunks = self.load_chunks(file_path=chunks_path)
+        model = self.load_model()
+        chunks = self.load_chunks()
         embeddings = self.create_embeddings(model, chunks)
-        self.attach_embeddings(chunks, embeddings)
         index = self.build_faiss_index(embeddings)
-        self.save_index(index, output_path=index_path)
-        return Path(index_path or self.index_path)
+        self.save_index(index)
+        return self.index_file

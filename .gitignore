@@ -217,3 +217,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Docs files used from the RAG project
+supporting_files/
+
+# Project-generated artifacts
+.reports/
+
+# Generic cache folders
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/.cache/

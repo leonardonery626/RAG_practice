@@ -10,6 +10,8 @@ from typing import Any
 
 import pdfplumber
 
+from src.tools.file_finder import DEFAULT_DATA_DIR, get_pdf_file
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,8 @@ class PDFChunker:
     ) -> None:
         self.chunk_size = max(chunk_size, 1)
         self.overlap = int(self.chunk_size * overlap_ratio)
+        # The PDF file is discovered from the declared folder, not hardcoded.
+        self.pdf_file = get_pdf_file(DEFAULT_DATA_DIR)
 
     @staticmethod
     def extract_pages(pdf_path: str | Path) -> list[dict[str, Any]]:
@@ -126,11 +130,11 @@ class PDFChunker:
 
     def process(
         self,
-        pdf_path: str | Path,
         output_path: str | Path,
+        pdf_path: str | Path | None = None,
     ) -> list[dict[str, Any]]:
         """Run the complete extraction and chunking workflow."""
-        pages = self.extract_pages(pdf_path)
+        pages = self.extract_pages(pdf_path or self.pdf_file)
         chunks = self.build_chunks(pages)
         self.save_chunks(chunks, output_path)
 
