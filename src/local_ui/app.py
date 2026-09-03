@@ -14,7 +14,9 @@ logging.basicConfig(level=logging.INFO)
 st.set_page_config(page_title="RAG PDF Q&A", page_icon="📄")
 
 
-@st.cache_resource(show_spinner="Loading the AI model (first run can take a few minutes)…")
+@st.cache_resource(
+    show_spinner="Loading the AI model (first run can take a few minutes)…"
+)
 def _load_generator_module() -> ModuleType:
     from src.func import generator_builder
 

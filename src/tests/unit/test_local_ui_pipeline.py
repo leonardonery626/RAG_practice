@@ -101,9 +101,7 @@ class TestIngestPdf:
 
 class TestAnswerQuery:
     @pytest.fixture
-    def fake_generator_builder(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> ModuleType:
+    def fake_generator_builder(self, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
         """Install a fake src.func.generator_builder module in sys.modules."""
         fake_module = ModuleType("src.func.generator_builder")
         fake_module.Generator = MagicMock(name="Generator")  # type: ignore[attr-defined]

@@ -59,8 +59,9 @@ def etl_pipeline(session: Session) -> None:
     session.run("uv", "run", "chunk_pdf", external=True)
     session.run("uv", "run", "build_embeddings", external=True)
 
+
 # Exposing the local FastAPI endpoints
-@nox.session(name = "web_server",python=PYTHON_VERSIONS[-1])
+@nox.session(name="web_server", python=PYTHON_VERSIONS[-1])
 def web_server(session: Session) -> None:
     """Serve the FastAPI application locally."""
     session.run("uv", "sync", "--locked", external=True)
