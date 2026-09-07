@@ -19,6 +19,8 @@ dependencies = [
     "uvicorn>=0.34.0",
     "pydantic>=2.9.0",
     "accelerate>=1.14.0",
+    "streamlit>=1.38.0",
+    "torchvision>=0.19.0", # transformers.pipeline() eagerly imports it (image_processing_tvp)
 ]
 
 [project.urls]
